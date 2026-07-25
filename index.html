@@ -10,7 +10,7 @@
 <body>
   <main class="arena-shell" aria-live="polite">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">SUNSET EDITION</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
+      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">ELIMINATION CHAMPIONSHIP</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
       <div class="topbar-center"><span class="live-dot"></span><span id="eventStatus">PRONTO</span></div>
       <div class="topbar-actions"><div class="clock-box"><span>ORA LOCALE</span><strong id="clock">22:00:00</strong></div><button class="icon-btn" id="voiceBtn" aria-label="Attiva o disattiva voce">🎙️</button><button class="icon-btn" id="soundBtn" aria-label="Attiva o disattiva suoni">🔊</button><button class="icon-btn" id="fullscreenBtn" aria-label="Schermo intero">⛶</button><button class="icon-btn" id="adminBtn" aria-label="Pannello amministratore">⚙</button></div>
     </header>
@@ -34,6 +34,13 @@
     </section>
   </main>
   <section class="countdown-overlay" id="countdownOverlay" aria-hidden="true"><p>IL NUOVO ROUND INIZIA TRA</p><strong id="countdownValue">30</strong><h2 id="countdownSlot">SLOT DA SELEZIONARE</h2><span>Prepararsi alle postazioni</span></section>
+  <section class="final-stage" id="finalStage" aria-hidden="true">
+    <div class="final-stage-glow"></div>
+    <button class="final-admin-btn" id="finalAdminBtn" aria-label="Apri regia finale">⚙</button>
+    <header class="final-stage-head"><p id="finalKicker">🏆 SLOT ARENA LIVE 🏆</p><h2 id="finalTitle">FINAL ROUND</h2><div class="final-stage-timer" id="finalStageTimer">10:00</div></header>
+    <div class="final-cards" id="finalCards"></div>
+    <footer><span id="finalSlotName">SLOT DA SELEZIONARE</span><strong>MONTEPREMI € 1.000</strong></footer>
+  </section>
   <aside class="admin-panel" id="adminPanel" aria-hidden="true">
     <div class="admin-head"><div><p class="eyebrow">REGIA TORNEO</p><h2>Pannello amministratore</h2></div><button class="icon-btn" id="closeAdminBtn" aria-label="Chiudi">×</button></div>
     <div class="admin-scroll">
@@ -41,6 +48,7 @@
       <section class="admin-section"><h3>Slot del round</h3><div class="form-grid"><label>Nome slot<input id="slotInput" type="text" placeholder="Es. Book of Ra Deluxe"></label><label>Scelta da<input id="chooserInput" type="text" placeholder="Nome partecipante"></label><label>Bet (€)<input id="betInput" type="number" min="0.10" step="0.10" value="0.50"></label></div><button class="secondary-btn full" id="saveSlotBtn">AGGIORNA SLOT</button></section>
       <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span id="playerLimitLabel">10 di 16</span></div><div class="new-player-form"><label>Nome nuovo partecipante<input id="newPlayerName" type="text" placeholder="Inserisci nome"></label><label>Credito iniziale (€)<input id="newPlayerCredit" type="number" min="0" step=".01" value="100"></label><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI PARTECIPANTE</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid participant-actions"><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div><button class="danger-btn full" id="eliminateLastBtn">ELIMINA ULTIMO IN CLASSIFICA</button></section>
       <section class="admin-section"><h3>Voce annunciatrice</h3><p class="admin-help">Voce italiana selezionata automaticamente dal dispositivo.</p><button class="secondary-btn full" id="testVoiceBtn">🎙️ PROVA LA VOCE</button></section>
+      <section class="admin-section final-controls"><h3>🏆 Gestione finale</h3><p class="admin-help">Disponibile quando restano esattamente tre partecipanti in gara.</p><button class="final-btn full" id="startFinalBtn">AVVIA MODALITÀ FINALE</button><div class="button-grid"><button class="primary-btn" id="showPodiumBtn">MOSTRA PODIO</button><button class="secondary-btn" id="exitFinalBtn">ESCI DALLA FINALE</button></div></section>
       <section class="admin-section"><h3>Gestione dati</h3><button class="ghost-btn" id="resetAllBtn">RIPRISTINA TORNEO</button></section>
     </div>
   </aside>
@@ -52,6 +60,8 @@
     <audio id="voice-thirty" preload="auto" src="audio/thirty.wav"></audio>
     <audio id="voice-ten" preload="auto" src="audio/ten.wav"></audio>
     <audio id="voice-end" preload="auto" src="audio/end.wav"></audio>
+    <audio id="voice-finalists" preload="auto" src="audio/finalists.wav"></audio>
+    <audio id="voice-podium" preload="auto" src="audio/podium.wav"></audio>
   </div>
   <script src="app.js"></script>
 </body>

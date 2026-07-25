@@ -1,7 +1,7 @@
 const KEY="slot-arena-live-v1";
 const fresh=()=>({round:1,duration:600,remaining:600,phase:"idle",countdown:30,slot:"Da selezionare",chooser:"—",bet:.5,sound:true,voice:true,players:Array.from({length:10},(_,i)=>({id:i+1,name:`Giocatore ${i+1}`,credit:100,active:true,station:i+1}))});
 let state=load(),timerId,toastId,audioContext,currentVoiceClip;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
-function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle"}}catch{return fresh()}}
+function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle",finalMode:false,podium:false}}catch{return fresh()}}
 function save(){localStorage.setItem(KEY,JSON.stringify({...state,phase:"idle"}))}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function sorted(){return [...state.players].sort((a,b)=>Number(b.active)-Number(a.active)||b.credit-a.credit||a.id-b.id)}
@@ -21,6 +21,7 @@ function render(){
   const active=state.players.filter(p=>p.active).length;$("activeCount").textContent=active;$("eliminatedCount").textContent=state.players.length-active;$("leaderboard").classList.toggle("compact",state.players.length>10);$("playerLimitLabel").textContent=`${state.players.length} di 16`;$("soundBtn").textContent=state.sound?"🔊":"🔇";$("voiceBtn").textContent=state.voice?"🎙️":"🚫";
   $("leaderboard").innerHTML=sorted().map((p,i)=>`<div class="player-row ${p.active&&i<3?`top-${i+1}`:""} ${p.active?"":"eliminated"}"><span class="rank">${p.active?String(i+1).padStart(2,"0"):"—"}</span><div class="player-main"><span class="avatar">${esc(p.name.slice(0,2).toUpperCase())}</span><div><div class="player-name">${esc(p.name)}</div><div class="player-status">${p.active?"IN GARA":"ELIMINATO"}</div></div></div><span class="station">P${p.station}</span><strong class="credit">${euro(p.credit)}</strong></div>`).join("");
   $("adminPlayers").innerHTML=sorted().map(p=>`<div class="admin-player ${p.active?"":"is-out"}" data-id="${p.id}"><span class="position">P${p.station}</span><input class="name-input" value="${esc(p.name)}"><input class="credit-input" type="number" min="0" step=".01" value="${Number(p.credit).toFixed(2)}"><button class="state-btn">${p.active?"●":"×"}</button></div>`).join("");
+  renderFinal();
   document.querySelectorAll(".admin-player").forEach(row=>{const p=state.players.find(x=>x.id===+row.dataset.id);const name=row.querySelector(".name-input"),credit=row.querySelector(".credit-input");name.oninput=e=>{p.name=e.target.value||`Giocatore ${p.id}`;save()};name.onblur=render;credit.oninput=e=>{p.credit=Math.max(0,+e.target.value||0);save()};credit.onblur=render;row.querySelector(".state-btn").onclick=()=>{p.active=!p.active;render();checkFinal()}});
   save();
 }
@@ -31,6 +32,10 @@ function countdown(){audio();unlockVoice();clearInterval(timerId);state.phase="c
 function next(){clearInterval(timerId);state.round++;state.duration=Math.max(60,+$("minutesInput").value*60||600);state.remaining=state.duration;state.phase="idle";render();note(`Round ${state.round} pronto`)}
 function eliminate(){const a=state.players.filter(p=>p.active);if(a.length<=3){note("Sono rimasti i tre finalisti");checkFinal();return}const min=Math.min(...a.map(p=>p.credit)),last=a.filter(p=>p.credit===min);if(last.length>1){speak("Attenzione. Parità sull'ultimo posto. È necessario uno spareggio.",true);note("Parità sull’ultimo posto: serve uno spareggio");return}last[0].active=false;sound("eliminate");speak(`${last[0].name} è stato eliminato.`,true);render();note(`${last[0].name} eliminato`);checkFinal()}
 function checkFinal(){if(state.players.filter(p=>p.active).length===3)note("Sono rimasti i tre finalisti")}
+function renderFinal(){const stage=$("finalStage");stage.classList.toggle("show",!!state.finalMode);stage.classList.toggle("podium",!!state.podium);stage.setAttribute("aria-hidden",String(!state.finalMode));if(!state.finalMode)return;const finalists=sorted().filter(p=>p.active).slice(0,3);$("finalTitle").textContent=state.podium?"PODIO FINALE":"FINAL ROUND";$("finalKicker").textContent=state.podium?"🏆 I VINCITORI 🏆":"🏆 GLI ULTIMI TRE IN GARA 🏆";$("finalStageTimer").textContent=time(state.remaining);$("finalSlotName").textContent=state.slot.toUpperCase();$("finalCards").innerHTML=finalists.map((p,i)=>`<article class="final-card position-${i+1}"><div class="final-medal">${["🥇","🥈","🥉"][i]}</div><div class="final-position">${i+1}° POSIZIONE</div><h3 class="final-name">${esc(p.name)}</h3><div class="final-station">POSTAZIONE P${p.station}</div><strong class="final-credit">${euro(p.credit)}</strong><div class="final-prize">${["€ 600","€ 300","€ 100"][i]}</div></article>`).join("")}
+function startFinal(){const active=state.players.filter(p=>p.active);if(active.length!==3){note(`Servono esattamente 3 finalisti. Ora sono ${active.length}`);return}state.finalMode=true;state.podium=false;admin(false);voiceClip("finalists");sound("start");render()}
+function showPodium(){if(!state.finalMode){note("Avvia prima la modalità finale");return}state.podium=true;clearInterval(timerId);state.phase="idle";sound("end");voiceClip("podium");render()}
+function exitFinal(){state.finalMode=false;state.podium=false;render();note("Modalità finale chiusa")}
 function addPlayer(){if(state.players.length>=16){note("Limite massimo: 16 partecipanti");return}const name=$("newPlayerName").value.trim();if(!name){note("Inserisci il nome del partecipante");$("newPlayerName").focus();return}const id=Math.max(0,...state.players.map(p=>p.id))+1,station=state.players.length+1,credit=Math.max(0,+$("newPlayerCredit").value||0);state.players.push({id,name,credit,active:true,station});$("newPlayerName").value="";$("newPlayerCredit").value="100";sound("add");render();note(`${name} aggiunto alla postazione ${station}`)}
 function removePlayer(){if(state.players.length<=3){note("Devono rimanere almeno 3 partecipanti");return}const removed=state.players.pop();render();note(`${removed.name} rimosso`)}
 function note(m){clearTimeout(toastId);$("toast").textContent=m;$("toast").classList.add("show");toastId=setTimeout(()=>$("toast").classList.remove("show"),2200)}
@@ -43,7 +48,9 @@ $("addPlayerBtn").onclick=addPlayer;$("removePlayerBtn").onclick=removePlayer;
 $("soundBtn").onclick=()=>{state.sound=!state.sound;if(state.sound){audio();sound("add")}render();note(state.sound?"Suoni attivati":"Suoni disattivati")};
 $("voiceBtn").onclick=()=>{state.voice=!state.voice;if(!state.voice){if("speechSynthesis" in window)speechSynthesis.cancel();if(currentVoiceClip)currentVoiceClip.pause()}render();if(state.voice)voiceClip("welcome");note(state.voice?"Voce attivata":"Voce disattivata")};
 $("testVoiceBtn").onclick=()=>voiceClip("welcome");
+$("startFinalBtn").onclick=startFinal;$("showPodiumBtn").onclick=showPodium;$("exitFinalBtn").onclick=exitFinal;
+$("finalAdminBtn").onclick=()=>admin(true);
 $("newPlayerName").onkeydown=e=>{if(e.key==="Enter")addPlayer()};
 $("resetAllBtn").onclick=()=>{if(confirm("Ripristinare tutti i dati del torneo?")){clearInterval(timerId);state=fresh();render();note("Torneo ripristinato")}};
-document.addEventListener("keydown",e=>{if(e.key==="Escape")admin(false);if((e.ctrlKey||e.metaKey)&&e.key===","){e.preventDefault();admin(true)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){admin(false);if(state.finalMode)exitFinal()}if((e.ctrlKey||e.metaKey)&&e.key===","){e.preventDefault();admin(true)}});
 setInterval(()=>$("clock").textContent=new Date().toLocaleTimeString("it-IT",{hour12:false}),1000);render();
