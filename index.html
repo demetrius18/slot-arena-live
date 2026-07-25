@@ -10,9 +10,9 @@
 <body>
   <main class="arena-shell" aria-live="polite">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">SUNSET EDITION</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
+      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">ELIMINATION CHAMPIONSHIP</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
       <div class="topbar-center"><span class="live-dot"></span><span id="eventStatus">PRONTO</span></div>
-      <div class="topbar-actions"><div class="clock-box"><span>ORA LOCALE</span><strong id="clock">22:00:00</strong></div><button class="icon-btn" id="fullscreenBtn" aria-label="Schermo intero">⛶</button><button class="icon-btn" id="adminBtn" aria-label="Pannello amministratore">⚙</button></div>
+      <div class="topbar-actions"><div class="clock-box"><span>ORA LOCALE</span><strong id="clock">22:00:00</strong></div><button class="icon-btn" id="soundBtn" aria-label="Attiva o disattiva suoni">🔊</button><button class="icon-btn" id="fullscreenBtn" aria-label="Schermo intero">⛶</button><button class="icon-btn" id="adminBtn" aria-label="Pannello amministratore">⚙</button></div>
     </header>
     <section class="stage-grid">
       <div class="left-stage">
@@ -39,7 +39,7 @@
     <div class="admin-scroll">
       <section class="admin-section"><h3>Round e tempo</h3><div class="form-grid three"><label>Round<input id="roundInput" type="number" min="1" max="20" value="1"></label><label>Minuti<input id="minutesInput" type="number" min="1" max="60" value="10"></label><label>Countdown<input id="countdownInput" type="number" min="3" max="60" value="30"></label></div><div class="button-grid"><button class="primary-btn" id="countdownBtn">30″ + AVVIO</button><button class="secondary-btn" id="resetTimerBtn">RESET TEMPO</button><button class="secondary-btn" id="nextRoundBtn">ROUND SUCCESSIVO</button></div></section>
       <section class="admin-section"><h3>Slot del round</h3><div class="form-grid"><label>Nome slot<input id="slotInput" type="text" placeholder="Es. Book of Ra Deluxe"></label><label>Scelta da<input id="chooserInput" type="text" placeholder="Nome partecipante"></label><label>Bet (€)<input id="betInput" type="number" min="0.10" step="0.10" value="0.50"></label></div><button class="secondary-btn full" id="saveSlotBtn">AGGIORNA SLOT</button></section>
-      <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span>massimo 16</span></div><div class="button-grid participant-actions"><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI</button><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid"><button class="danger-btn" id="eliminateLastBtn">ELIMINA ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div></section>
+      <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span id="playerLimitLabel">10 di 16</span></div><div class="new-player-form"><label>Nome nuovo partecipante<input id="newPlayerName" type="text" placeholder="Inserisci nome"></label><label>Credito iniziale (€)<input id="newPlayerCredit" type="number" min="0" step=".01" value="100"></label><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI PARTECIPANTE</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid participant-actions"><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div><button class="danger-btn full" id="eliminateLastBtn">ELIMINA ULTIMO IN CLASSIFICA</button></section>
       <section class="admin-section"><h3>Gestione dati</h3><button class="ghost-btn" id="resetAllBtn">RIPRISTINA TORNEO</button></section>
     </div>
   </aside>
