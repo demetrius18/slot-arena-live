@@ -1,6 +1,6 @@
 const KEY="slot-arena-live-v1";
 const fresh=()=>({round:1,duration:600,remaining:600,phase:"idle",countdown:30,slot:"Da selezionare",chooser:"—",bet:.5,sound:true,voice:true,players:Array.from({length:10},(_,i)=>({id:i+1,name:`Giocatore ${i+1}`,credit:100,active:true,station:i+1}))});
-let state=load(),timerId,toastId,audioContext;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
+let state=load(),timerId,toastId,audioContext,currentVoiceClip;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
 function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle"}}catch{return fresh()}}
 function save(){localStorage.setItem(KEY,JSON.stringify({...state,phase:"idle"}))}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
@@ -11,6 +11,7 @@ function tone(freq,duration=.12,delay=0,type="sine",volume=.08){const ctx=audio(
 function sound(name){if(name==="start"){tone(440,.18,0,"sine",.1);tone(660,.22,.16,"sine",.11);tone(880,.4,.34,"sine",.12)}if(name==="tick")tone(880,.09,0,"square",.055);if(name==="end"){tone(660,.2);tone(440,.3,.18);tone(220,.55,.42,"sine",.12)}if(name==="eliminate"){tone(260,.18,0,"sawtooth",.07);tone(150,.45,.16,"sawtooth",.08)}if(name==="add"){tone(620,.1);tone(820,.18,.1)}}
 function italianVoice(){const voices=speechSynthesis.getVoices(),it=voices.filter(v=>v.lang.toLowerCase().startsWith("it"));return it.find(v=>/elsa|alice|federica|isabella|female|donna/i.test(v.name))||it[0]||voices[0]}
 function speak(text,interrupt=false){if(!state.voice||!("speechSynthesis" in window))return;if(interrupt)speechSynthesis.cancel();const message=new SpeechSynthesisUtterance(text),voice=italianVoice();if(voice)message.voice=voice;message.lang="it-IT";message.rate=.9;message.pitch=1.08;message.volume=.95;speechSynthesis.speak(message)}
+function voiceClip(name){if(!state.voice)return;if(currentVoiceClip){currentVoiceClip.pause();currentVoiceClip.currentTime=0}if("speechSynthesis" in window)speechSynthesis.cancel();currentVoiceClip=new Audio(`audio/${name}.wav`);currentVoiceClip.volume=.95;currentVoiceClip.play().catch(()=>note("Premi 🎙️ per abilitare la voce"))}
 function render(){
   $("roundNumber").textContent=state.round;$("roundInput").value=state.round;$("minutesInput").value=Math.round(state.duration/60);$("countdownInput").value=state.countdown;
   $("slotName").textContent=state.slot;$("slotChooser").textContent=state.chooser;$("slotInput").value=state.slot==="Da selezionare"?"":state.slot;$("chooserInput").value=state.chooser==="—"?"":state.chooser;$("betInput").value=state.bet;$("betValue").textContent=euro(state.bet);
@@ -22,7 +23,7 @@ function render(){
   document.querySelectorAll(".admin-player").forEach(row=>{const p=state.players.find(x=>x.id===+row.dataset.id);const name=row.querySelector(".name-input"),credit=row.querySelector(".credit-input");name.oninput=e=>{p.name=e.target.value||`Giocatore ${p.id}`;save()};name.onblur=render;credit.oninput=e=>{p.credit=Math.max(0,+e.target.value||0);save()};credit.onblur=render;row.querySelector(".state-btn").onclick=()=>{p.active=!p.active;render();checkFinal()}});
   save();
 }
-function start(){if(state.phase==="running")return;sound("start");speak("Il round inizia adesso. Buona fortuna a tutti.",true);state.phase="running";clearInterval(timerId);timerId=setInterval(()=>{state.remaining--;if(state.remaining===60)speak("Manca un minuto alla fine del round.");if(state.remaining===30)speak("Mancano trenta secondi alla fine.");if(state.remaining===10)speak("Dieci secondi alla fine.");if(state.remaining<=0){state.remaining=0;clearInterval(timerId);state.phase="idle";sound("end");speak("Round terminato. Fermate il gioco.",true);note("Round terminato")}render()},1000);render()}
+function start(){if(state.phase==="running")return;sound("start");voiceClip("start");state.phase="running";clearInterval(timerId);timerId=setInterval(()=>{state.remaining--;if(state.remaining===60)voiceClip("minute");if(state.remaining===30)voiceClip("thirty");if(state.remaining===10)voiceClip("ten");if(state.remaining<=0){state.remaining=0;clearInterval(timerId);state.phase="idle";sound("end");voiceClip("end");note("Round terminato")}render()},1000);render()}
 function pause(){if(state.phase==="running"){clearInterval(timerId);state.phase="paused";render()}}
 function resetTimer(){clearInterval(timerId);state.phase="idle";state.remaining=state.duration;render();note("Cronometro ripristinato")}
 function countdown(){audio();clearInterval(timerId);state.phase="countdown";let left=Math.max(3,+$("countdownInput").value||30);state.countdown=left;$("countdownValue").textContent=left;$("countdownSlot").textContent=state.slot.toUpperCase();$("countdownOverlay").classList.add("show");render();timerId=setInterval(()=>{left--;if(left<=5&&left>0)sound("tick");$("countdownValue").textContent=left;if(left<=0){clearInterval(timerId);$("countdownOverlay").classList.remove("show");state.remaining=state.duration;start()}},1000)}
@@ -39,8 +40,8 @@ $("roundInput").onchange=e=>{state.round=Math.max(1,+e.target.value||1);render()
 $("fullscreenBtn").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>note("Schermo intero non disponibile"));
 $("addPlayerBtn").onclick=addPlayer;$("removePlayerBtn").onclick=removePlayer;
 $("soundBtn").onclick=()=>{state.sound=!state.sound;if(state.sound){audio();sound("add")}render();note(state.sound?"Suoni attivati":"Suoni disattivati")};
-$("voiceBtn").onclick=()=>{state.voice=!state.voice;if(!state.voice&&"speechSynthesis" in window)speechSynthesis.cancel();render();if(state.voice)speak("Voce annunciatrice attivata.",true);note(state.voice?"Voce attivata":"Voce disattivata")};
-$("testVoiceBtn").onclick=()=>speak("Benvenuti a Slot Arena Live. Preparatevi, il torneo sta per iniziare.",true);
+$("voiceBtn").onclick=()=>{state.voice=!state.voice;if(!state.voice){if("speechSynthesis" in window)speechSynthesis.cancel();if(currentVoiceClip)currentVoiceClip.pause()}render();if(state.voice)voiceClip("welcome");note(state.voice?"Voce attivata":"Voce disattivata")};
+$("testVoiceBtn").onclick=()=>voiceClip("welcome");
 $("newPlayerName").onkeydown=e=>{if(e.key==="Enter")addPlayer()};
 $("resetAllBtn").onclick=()=>{if(confirm("Ripristinare tutti i dati del torneo?")){clearInterval(timerId);state=fresh();render();note("Torneo ripristinato")}};
 document.addEventListener("keydown",e=>{if(e.key==="Escape")admin(false);if((e.ctrlKey||e.metaKey)&&e.key===","){e.preventDefault();admin(true)}});
