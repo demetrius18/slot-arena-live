@@ -1,11 +1,12 @@
 const KEY="slot-arena-live-v1";
-const fresh=()=>({round:1,duration:600,remaining:600,phase:"idle",countdown:30,slot:"Da selezionare",chooser:"—",bet:.5,sound:true,voice:true,players:Array.from({length:10},(_,i)=>({id:i+1,name:`Giocatore ${i+1}`,credit:100,active:true,station:i+1}))});
+const fresh=()=>({round:1,duration:600,remaining:600,phase:"idle",countdown:30,slot:"Da selezionare",chooser:"—",bet:.5,sound:true,voice:true,waiting:false,waitTarget:"",players:Array.from({length:10},(_,i)=>({id:i+1,name:`Giocatore ${i+1}`,credit:100,active:true,station:i+1}))});
 let state=load(),timerId,toastId,audioContext,currentVoiceClip;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
-function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle",finalMode:false,podium:false}}catch{return fresh()}}
+function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle",waiting:false,finalMode:false,podium:false}}catch{return fresh()}}
 function save(){localStorage.setItem(KEY,JSON.stringify({...state,phase:"idle"}))}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function sorted(){return [...state.players].sort((a,b)=>Number(b.active)-Number(a.active)||b.credit-a.credit||a.id-b.id)}
 function time(s){s=Math.max(0,Math.ceil(s));return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
+function defaultWaitTarget(){const d=new Date();d.setHours(22,0,0,0);if(d<=new Date())d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function audio(){if(!state.sound)return null;audioContext=audioContext||new(window.AudioContext||window.webkitAudioContext)();if(audioContext.state==="suspended")audioContext.resume();return audioContext}
 function tone(freq,duration=.12,delay=0,type="sine",volume=.08){const ctx=audio();if(!ctx)return;const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+delay;osc.type=type;osc.frequency.setValueAtTime(freq,start);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.02)}
 function sound(name){if(name==="start"){tone(440,.18,0,"sine",.1);tone(660,.22,.16,"sine",.11);tone(880,.4,.34,"sine",.12)}if(name==="tick")tone(880,.09,0,"square",.055);if(name==="end"){tone(660,.2);tone(440,.3,.18);tone(220,.55,.42,"sine",.12)}if(name==="eliminate"){tone(260,.18,0,"sawtooth",.07);tone(150,.45,.16,"sawtooth",.08)}if(name==="add"){tone(620,.1);tone(820,.18,.1)}}
@@ -14,6 +15,7 @@ function speak(text,interrupt=false){if(!state.voice||!("speechSynthesis" in win
 function voiceClip(name){if(!state.voice)return;if(currentVoiceClip){currentVoiceClip.pause();currentVoiceClip.currentTime=0}if("speechSynthesis" in window)speechSynthesis.cancel();currentVoiceClip=$(`voice-${name}`);if(!currentVoiceClip)return;currentVoiceClip.muted=false;currentVoiceClip.volume=.95;currentVoiceClip.currentTime=0;currentVoiceClip.play().catch(()=>note("Premi PROVA LA VOCE per abilitare l’audio"))}
 function unlockVoice(){const clip=$("voice-start");if(!clip)return;clip.muted=true;clip.volume=0;clip.play().then(()=>{clip.pause();clip.currentTime=0;clip.muted=false;clip.volume=.95}).catch(()=>{})}
 function render(){
+  if(!state.waitTarget)state.waitTarget=defaultWaitTarget();if(document.activeElement!==$("waitingTargetInput"))$("waitingTargetInput").value=state.waitTarget;
   $("roundNumber").textContent=state.round;$("roundInput").value=state.round;$("minutesInput").value=Math.round(state.duration/60);$("countdownInput").value=state.countdown;
   $("slotName").textContent=state.slot;$("slotChooser").textContent=state.chooser;$("slotInput").value=state.slot==="Da selezionare"?"":state.slot;$("chooserInput").value=state.chooser==="—"?"":state.chooser;$("betInput").value=state.bet;$("betValue").textContent=euro(state.bet);
   $("timer").textContent=time(state.remaining);$("timer").classList.toggle("warning",state.remaining<=60&&state.remaining>30);$("timer").classList.toggle("danger",state.remaining<=30);
@@ -22,6 +24,7 @@ function render(){
   $("leaderboard").innerHTML=sorted().map((p,i)=>`<div class="player-row ${p.active&&i<3?`top-${i+1}`:""} ${p.active?"":"eliminated"}"><span class="rank">${p.active?String(i+1).padStart(2,"0"):"—"}</span><div class="player-main"><span class="avatar">${esc(p.name.slice(0,2).toUpperCase())}</span><div><div class="player-name">${esc(p.name)}</div><div class="player-status">${p.active?"IN GARA":"ELIMINATO"}</div></div></div><span class="station">P${p.station}</span><strong class="credit">${euro(p.credit)}</strong></div>`).join("");
   $("adminPlayers").innerHTML=sorted().map(p=>`<div class="admin-player ${p.active?"":"is-out"}" data-id="${p.id}"><span class="position">P${p.station}</span><input class="name-input" value="${esc(p.name)}"><input class="credit-input" type="number" min="0" step=".01" value="${Number(p.credit).toFixed(2)}"><button class="state-btn">${p.active?"●":"×"}</button></div>`).join("");
   renderFinal();
+  renderWaiting();
   document.querySelectorAll(".admin-player").forEach(row=>{const p=state.players.find(x=>x.id===+row.dataset.id);const name=row.querySelector(".name-input"),credit=row.querySelector(".credit-input");name.oninput=e=>{p.name=e.target.value||`Giocatore ${p.id}`;save()};name.onblur=render;credit.oninput=e=>{p.credit=Math.max(0,+e.target.value||0);save()};credit.onblur=render;row.querySelector(".state-btn").onclick=()=>{p.active=!p.active;render();checkFinal()}});
   save();
 }
@@ -36,6 +39,9 @@ function renderFinal(){const stage=$("finalStage");stage.classList.toggle("show"
 function startFinal(){const active=state.players.filter(p=>p.active);if(active.length!==3){note(`Servono esattamente 3 finalisti. Ora sono ${active.length}`);return}state.finalMode=true;state.podium=false;admin(false);voiceClip("finalists");sound("start");render()}
 function showPodium(){if(!state.finalMode){note("Avvia prima la modalità finale");return}state.podium=true;clearInterval(timerId);state.phase="idle";sound("end");voiceClip("podium");render()}
 function exitFinal(){state.finalMode=false;state.podium=false;render();note("Modalità finale chiusa")}
+function renderWaiting(){const screen=$("eventWaiting");screen.classList.toggle("show",!!state.waiting);screen.setAttribute("aria-hidden",String(!state.waiting));if(!state.waiting)return;const target=new Date(state.waitTarget),diff=Math.max(0,target-Date.now()),total=Math.floor(diff/1000),hours=Math.floor(total/3600),minutes=Math.floor(total%3600/60),seconds=total%60;$("waitingTimer").textContent=`${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;$("waitingStartLabel").textContent=`INIZIO ORE ${target.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`}
+function startWaiting(){const value=$("waitingTargetInput").value,target=new Date(value);if(!value||Number.isNaN(target.getTime())){note("Inserisci data e ora di inizio");return}state.waitTarget=value;state.waiting=true;state.finalMode=false;admin(false);renderWaiting();save()}
+function exitWaiting(){state.waiting=false;render();note("Schermata torneo aperta")}
 function addPlayer(){if(state.players.length>=16){note("Limite massimo: 16 partecipanti");return}const name=$("newPlayerName").value.trim();if(!name){note("Inserisci il nome del partecipante");$("newPlayerName").focus();return}const id=Math.max(0,...state.players.map(p=>p.id))+1,station=state.players.length+1,credit=Math.max(0,+$("newPlayerCredit").value||0);state.players.push({id,name,credit,active:true,station});$("newPlayerName").value="";$("newPlayerCredit").value="100";sound("add");render();note(`${name} aggiunto alla postazione ${station}`)}
 function removePlayer(){if(state.players.length<=3){note("Devono rimanere almeno 3 partecipanti");return}const removed=state.players.pop();render();note(`${removed.name} rimosso`)}
 function note(m){clearTimeout(toastId);$("toast").textContent=m;$("toast").classList.add("show");toastId=setTimeout(()=>$("toast").classList.remove("show"),2200)}
@@ -50,7 +56,8 @@ $("voiceBtn").onclick=()=>{state.voice=!state.voice;if(!state.voice){if("speechS
 $("testVoiceBtn").onclick=()=>voiceClip("welcome");
 $("startFinalBtn").onclick=startFinal;$("showPodiumBtn").onclick=showPodium;$("exitFinalBtn").onclick=exitFinal;
 $("finalAdminBtn").onclick=()=>admin(true);
+$("waitingAdminBtn").onclick=()=>admin(true);$("startWaitingBtn").onclick=startWaiting;$("exitWaitingBtn").onclick=exitWaiting;
 $("newPlayerName").onkeydown=e=>{if(e.key==="Enter")addPlayer()};
 $("resetAllBtn").onclick=()=>{if(confirm("Ripristinare tutti i dati del torneo?")){clearInterval(timerId);state=fresh();render();note("Torneo ripristinato")}};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){admin(false);if(state.finalMode)exitFinal()}if((e.ctrlKey||e.metaKey)&&e.key===","){e.preventDefault();admin(true)}});
-setInterval(()=>$("clock").textContent=new Date().toLocaleTimeString("it-IT",{hour12:false}),1000);render();
+setInterval(()=>{$("clock").textContent=new Date().toLocaleTimeString("it-IT",{hour12:false});renderWaiting()},1000);render();

@@ -34,6 +34,13 @@
     </section>
   </main>
   <section class="countdown-overlay" id="countdownOverlay" aria-hidden="true"><p>IL NUOVO ROUND INIZIA TRA</p><strong id="countdownValue">30</strong><h2 id="countdownSlot">SLOT DA SELEZIONARE</h2><span>Prepararsi alle postazioni</span></section>
+  <section class="event-waiting" id="eventWaiting" aria-hidden="true">
+    <div class="waiting-orbit orbit-one"></div><div class="waiting-orbit orbit-two"></div>
+    <button class="waiting-admin-btn" id="waitingAdminBtn" aria-label="Apri regia">⚙</button>
+    <div class="waiting-brand"><span>SA</span><p>SLOT ARENA LIVE</p></div>
+    <div class="waiting-content"><p class="waiting-eyebrow">IL TORNEO INIZIA TRA</p><div class="waiting-timer" id="waitingTimer">00:00:00</div><div class="waiting-labels"><span>ORE</span><span>MINUTI</span><span>SECONDI</span></div><p class="waiting-start" id="waitingStartLabel">INIZIO ORE 22:00</p></div>
+    <div class="waiting-prize"><span>MONTEPREMI</span><strong>€ 1.000</strong></div>
+  </section>
   <section class="final-stage" id="finalStage" aria-hidden="true">
     <div class="final-stage-glow"></div>
     <button class="final-admin-btn" id="finalAdminBtn" aria-label="Apri regia finale">⚙</button>
@@ -44,6 +51,7 @@
   <aside class="admin-panel" id="adminPanel" aria-hidden="true">
     <div class="admin-head"><div><p class="eyebrow">REGIA TORNEO</p><h2>Pannello amministratore</h2></div><button class="icon-btn" id="closeAdminBtn" aria-label="Chiudi">×</button></div>
     <div class="admin-scroll">
+      <section class="admin-section waiting-controls"><h3>Schermata di attesa</h3><label>Data e ora di inizio<input id="waitingTargetInput" type="datetime-local"></label><div class="button-grid waiting-buttons"><button class="primary-btn" id="startWaitingBtn">AVVIA ATTESA</button><button class="secondary-btn" id="exitWaitingBtn">APRI TORNEO</button></div></section>
       <section class="admin-section"><h3>Round e tempo</h3><div class="form-grid three"><label>Round<input id="roundInput" type="number" min="1" max="20" value="1"></label><label>Minuti<input id="minutesInput" type="number" min="1" max="60" value="10"></label><label>Countdown<input id="countdownInput" type="number" min="3" max="60" value="30"></label></div><div class="button-grid"><button class="primary-btn" id="countdownBtn">30″ + AVVIO</button><button class="secondary-btn" id="resetTimerBtn">RESET TEMPO</button><button class="secondary-btn" id="nextRoundBtn">ROUND SUCCESSIVO</button></div></section>
       <section class="admin-section"><h3>Slot del round</h3><div class="form-grid"><label>Nome slot<input id="slotInput" type="text" placeholder="Es. Book of Ra Deluxe"></label><label>Scelta da<input id="chooserInput" type="text" placeholder="Nome partecipante"></label><label>Bet (€)<input id="betInput" type="number" min="0.10" step="0.10" value="0.50"></label></div><button class="secondary-btn full" id="saveSlotBtn">AGGIORNA SLOT</button></section>
       <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span id="playerLimitLabel">10 di 16</span></div><div class="new-player-form"><label>Nome nuovo partecipante<input id="newPlayerName" type="text" placeholder="Inserisci nome"></label><label>Credito iniziale (€)<input id="newPlayerCredit" type="number" min="0" step=".01" value="100"></label><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI PARTECIPANTE</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid participant-actions"><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div><button class="danger-btn full" id="eliminateLastBtn">ELIMINA ULTIMO IN CLASSIFICA</button></section>
