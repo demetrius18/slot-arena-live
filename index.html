@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#060810">
   <title>Slot Arena Live</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="arena-shell" aria-live="polite">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">Sunset Edition</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
+      <div class="brand"><div class="brand-mark">SA</div><div><p class="eyebrow">ELIMINATION CHAMPIONSHIP</p><h1>SLOT ARENA <span>LIVE</span></h1></div></div>
       <div class="topbar-center"><span class="live-dot"></span><span id="eventStatus">PRONTO</span></div>
       <div class="topbar-actions"><div class="clock-box"><span>ORA LOCALE</span><strong id="clock">22:00:00</strong></div><button class="icon-btn" id="fullscreenBtn" aria-label="Schermo intero">⛶</button><button class="icon-btn" id="adminBtn" aria-label="Pannello amministratore">⚙</button></div>
     </header>
@@ -34,13 +34,12 @@
     </section>
   </main>
   <section class="countdown-overlay" id="countdownOverlay" aria-hidden="true"><p>IL NUOVO ROUND INIZIA TRA</p><strong id="countdownValue">30</strong><h2 id="countdownSlot">SLOT DA SELEZIONARE</h2><span>Prepararsi alle postazioni</span></section>
-  <section class="final-overlay" id="finalOverlay" aria-hidden="true"><button class="overlay-close" id="closeFinalBtn">×</button><p>🏆 FINAL ROUND 🏆</p><h2>I TRE FINALISTI</h2><div id="finalists"></div></section>
   <aside class="admin-panel" id="adminPanel" aria-hidden="true">
     <div class="admin-head"><div><p class="eyebrow">REGIA TORNEO</p><h2>Pannello amministratore</h2></div><button class="icon-btn" id="closeAdminBtn" aria-label="Chiudi">×</button></div>
     <div class="admin-scroll">
       <section class="admin-section"><h3>Round e tempo</h3><div class="form-grid three"><label>Round<input id="roundInput" type="number" min="1" max="20" value="1"></label><label>Minuti<input id="minutesInput" type="number" min="1" max="60" value="10"></label><label>Countdown<input id="countdownInput" type="number" min="3" max="60" value="30"></label></div><div class="button-grid"><button class="primary-btn" id="countdownBtn">30″ + AVVIO</button><button class="secondary-btn" id="resetTimerBtn">RESET TEMPO</button><button class="secondary-btn" id="nextRoundBtn">ROUND SUCCESSIVO</button></div></section>
       <section class="admin-section"><h3>Slot del round</h3><div class="form-grid"><label>Nome slot<input id="slotInput" type="text" placeholder="Es. Book of Ra Deluxe"></label><label>Scelta da<input id="chooserInput" type="text" placeholder="Nome partecipante"></label><label>Bet (€)<input id="betInput" type="number" min="0.10" step="0.10" value="0.50"></label></div><button class="secondary-btn full" id="saveSlotBtn">AGGIORNA SLOT</button></section>
-      <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span>clic sullo stato per ripristinare</span></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid"><button class="danger-btn" id="eliminateLastBtn">ELIMINA ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div></section>
+      <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span>massimo 16</span></div><div class="button-grid participant-actions"><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI</button><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid"><button class="danger-btn" id="eliminateLastBtn">ELIMINA ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div></section>
       <section class="admin-section"><h3>Gestione dati</h3><button class="ghost-btn" id="resetAllBtn">RIPRISTINA TORNEO</button></section>
     </div>
   </aside>
