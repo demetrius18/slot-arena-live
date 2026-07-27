@@ -1,18 +1,34 @@
-# Slot Arena Live
+# Slot Arena Live 2.0 — Database
 
-Applicazione statica per la regia di un torneo su monitor 55": cronometro,
-countdown, classifica fino a 10 partecipanti, crediti, eliminazioni, selezione
-slot, finale, schermo intero e salvataggio automatico nel browser.
+Questa versione conserva il salvataggio locale e aggiunge:
 
-## Uso
+- database Supabase;
+- accesso amministratore;
+- aggiornamento live tra regia e monitor;
+- creazione e archivio dei tornei;
+- storico consultabile.
 
-Apri `index.html`. Premi l'ingranaggio per aprire la regia. La scorciatoia è
-`Ctrl+,` su Windows oppure `Cmd+,` su macOS.
+## Attivazione iniziale
 
-## GitHub Pages
+1. Apri il progetto Supabase.
+2. Vai in **SQL Editor**, crea una nuova query e incolla tutto il contenuto di `database-setup.sql`.
+3. Premi **Run**.
+4. Vai in **Authentication → Users → Add user**.
+5. Crea l'email e la password dell'amministratore.
+6. Carica su GitHub tutti i file e la cartella `audio`.
 
-Carica `index.html`, `styles.css` e `app.js` nella radice del repository. In
-**Settings → Pages**, scegli **Deploy from a branch**, branch `main`, cartella
-`/ (root)`.
+Non caricare mai nel progetto una chiave `service_role`, una secret key o la password del database.
 
-Non serve un database: lo stato viene conservato nel browser del dispositivo.
+## Utilizzo
+
+1. Apri il pannello amministratore.
+2. Accedi nella sezione **Database torneo**.
+3. Inserisci un nome e premi **Nuovo torneo**.
+4. Da quel momento ogni modifica viene salvata localmente e nel cloud.
+5. Sul monitor apri lo stesso indirizzo GitHub Pages: la classifica viene caricata e aggiornata in tempo reale.
+
+Il pulsante **Archivia attuale** conserva il risultato finale. Il pulsante **Storico tornei** permette di riaprire gli eventi salvati.
+
+## Privacy
+
+Usare nomi di gara, iniziali o codici. Non inserire numeri di conto, documenti, depositi, recapiti o altri dati personali non necessari.

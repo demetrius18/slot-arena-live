@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#060810">
   <title>Slot Arena Live</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="arena-shell" aria-live="polite">
@@ -57,7 +57,22 @@
       <section class="admin-section"><div class="section-title-row"><h3>Partecipanti e crediti</h3><span id="playerLimitLabel">10 di 16</span></div><div class="new-player-form"><label>Nome nuovo partecipante<input id="newPlayerName" type="text" placeholder="Inserisci nome"></label><label>Credito iniziale (€)<input id="newPlayerCredit" type="number" min="0" step=".01" value="100"></label><button class="primary-btn" id="addPlayerBtn">＋ AGGIUNGI PARTECIPANTE</button></div><div id="adminPlayers" class="admin-players"></div><div class="button-grid participant-actions"><button class="secondary-btn" id="removePlayerBtn">－ RIMUOVI ULTIMO</button><button class="secondary-btn" id="sortBtn">ORDINA CLASSIFICA</button></div><button class="danger-btn full" id="eliminateLastBtn">ELIMINA ULTIMO IN CLASSIFICA</button></section>
       <section class="admin-section"><h3>Voce annunciatrice</h3><p class="admin-help">Voce italiana selezionata automaticamente dal dispositivo.</p><button class="secondary-btn full" id="testVoiceBtn">🎙️ PROVA LA VOCE</button></section>
       <section class="admin-section final-controls"><h3>🏆 Gestione finale</h3><p class="admin-help">Disponibile quando restano esattamente tre partecipanti in gara.</p><button class="final-btn full" id="startFinalBtn">AVVIA MODALITÀ FINALE</button><div class="button-grid"><button class="primary-btn" id="showPodiumBtn">MOSTRA PODIO</button><button class="secondary-btn" id="exitFinalBtn">ESCI DALLA FINALE</button></div></section>
-      <section class="admin-section"><h3>Gestione dati</h3><button class="ghost-btn" id="resetAllBtn">RIPRISTINA TORNEO</button></section>
+      <section class="admin-section cloud-section">
+        <div class="section-title-row"><h3>☁ Database torneo</h3><span class="cloud-status offline" id="cloudStatus">CONNESSIONE…</span></div>
+        <div id="cloudLogin">
+          <p class="admin-help">Accedi per salvare e modificare i dati. Il monitor può visualizzare la classifica senza accesso.</p>
+          <div class="form-grid"><label>Email amministratore<input id="adminEmail" type="email" autocomplete="username" placeholder="nome@email.it"></label><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••"></label></div>
+          <button class="primary-btn full" id="cloudLoginBtn">ACCEDI AL DATABASE</button>
+        </div>
+        <div id="cloudAdmin" hidden>
+          <p class="admin-help" id="cloudUserLabel">Amministratore connesso</p>
+          <div class="form-grid cloud-create"><label>Nome nuovo torneo<input id="cloudTournamentName" type="text" value="Slot Arena Live"></label><button class="primary-btn" id="cloudNewBtn">NUOVO TORNEO</button></div>
+          <div class="button-grid"><button class="secondary-btn" id="cloudHistoryBtn">STORICO TORNEI</button><button class="secondary-btn" id="cloudArchiveBtn">ARCHIVIA ATTUALE</button></div>
+          <button class="ghost-btn full cloud-logout" id="cloudLogoutBtn">ESCI DALL’ACCOUNT</button>
+        </div>
+        <div class="cloud-history" id="cloudHistory" hidden></div>
+      </section>
+      <section class="admin-section"><h3>Gestione dati locali</h3><p class="admin-help">Il salvataggio locale resta disponibile anche senza connessione.</p><button class="ghost-btn full" id="resetAllBtn">RIPRISTINA TORNEO</button></section>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div><div class="toast" id="toast" role="status"></div>
@@ -71,6 +86,9 @@
     <audio id="voice-finalists" preload="auto" src="audio/finalists.wav"></audio>
     <audio id="voice-podium" preload="auto" src="audio/podium.wav"></audio>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

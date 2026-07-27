@@ -1,8 +1,8 @@
 const KEY="slot-arena-live-v1";
 const fresh=()=>({round:1,duration:600,remaining:600,phase:"idle",countdown:30,slot:"Da selezionare",chooser:"—",bet:.5,sound:true,voice:true,waiting:false,waitTarget:"",players:Array.from({length:10},(_,i)=>({id:i+1,name:`Giocatore ${i+1}`,credit:100,active:true,station:i+1}))});
-let state=load(),timerId,toastId,audioContext,currentVoiceClip;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
+let state=load(),timerId,toastId,audioContext,currentVoiceClip,remoteApplying=false;const $=id=>document.getElementById(id);const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number(n)||0);
 function load(){try{return {...fresh(),...JSON.parse(localStorage.getItem(KEY)),phase:"idle",waiting:false,finalMode:false,podium:false}}catch{return fresh()}}
-function save(){localStorage.setItem(KEY,JSON.stringify({...state,phase:"idle"}))}
+function save(){localStorage.setItem(KEY,JSON.stringify({...state,phase:"idle"}));if(!remoteApplying)window.SlotArenaCloud?.scheduleSave(state)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function sorted(){return [...state.players].sort((a,b)=>Number(b.active)-Number(a.active)||b.credit-a.credit||a.id-b.id)}
 function time(s){s=Math.max(0,Math.ceil(s));return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
@@ -60,4 +60,18 @@ $("waitingAdminBtn").onclick=()=>admin(true);$("startWaitingBtn").onclick=startW
 $("newPlayerName").onkeydown=e=>{if(e.key==="Enter")addPlayer()};
 $("resetAllBtn").onclick=()=>{if(confirm("Ripristinare tutti i dati del torneo?")){clearInterval(timerId);state=fresh();render();note("Torneo ripristinato")}};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){admin(false);if(state.finalMode)exitFinal()}if((e.ctrlKey||e.metaKey)&&e.key===","){e.preventDefault();admin(true)}});
+function cloudStatus(info){const el=$("cloudStatus");el.textContent=info.text;el.className=`cloud-status ${info.kind}`}
+function cloudAuth(user){$("cloudLogin").hidden=!!user;$("cloudAdmin").hidden=!user;$("cloudUserLabel").textContent=user?`Connesso come ${user.email}`:""}
+async function cloudAction(action,success){try{await action();if(success)note(success)}catch(error){console.error(error);note(error.message||"Operazione database non riuscita")}}
+async function showCloudHistory(){await cloudAction(async()=>{const rows=await SlotArenaCloud.listTournaments();$("cloudHistory").hidden=false;$("cloudHistory").innerHTML=rows.length?rows.map(t=>`<div class="cloud-history-row"><div><strong>${esc(t.name)}</strong><span>${new Date(t.created_at).toLocaleString("it-IT")} · ${t.status.toUpperCase()}</span></div><button data-cloud-id="${t.id}">APRI</button></div>`).join(""):"<p class=\"admin-help\">Nessun torneo archiviato.</p>";document.querySelectorAll("[data-cloud-id]").forEach(button=>button.onclick=()=>cloudAction(()=>SlotArenaCloud.openTournament(button.dataset.cloudId),"Torneo caricato"))})}
+$("cloudLoginBtn").onclick=()=>cloudAction(()=>SlotArenaCloud.signIn($("adminEmail").value.trim(),$("adminPassword").value),"Accesso effettuato");
+$("cloudLogoutBtn").onclick=()=>cloudAction(()=>SlotArenaCloud.signOut(),"Account disconnesso");
+$("cloudNewBtn").onclick=()=>cloudAction(async()=>{if(SlotArenaCloud.currentId()&&!confirm("Creare un nuovo torneo? Il torneo attuale resterà nello storico."))return;clearInterval(timerId);state=fresh();render();await SlotArenaCloud.createTournament($("cloudTournamentName").value.trim(),state)},"Nuovo torneo online creato");
+$("cloudArchiveBtn").onclick=()=>{if(confirm("Archiviare il torneo attuale nello storico?"))cloudAction(()=>SlotArenaCloud.archiveTournament(),"Torneo archiviato")};
+$("cloudHistoryBtn").onclick=showCloudHistory;
+SlotArenaCloud.init({
+  onStatus:cloudStatus,
+  onAuth:cloudAuth,
+  onState:(remote,tournament)=>{remoteApplying=true;clearInterval(timerId);state={...fresh(),...remote};render();remoteApplying=false;note(`Sincronizzato: ${tournament.name}`)}
+});
 setInterval(()=>{$("clock").textContent=new Date().toLocaleTimeString("it-IT",{hour12:false});renderWaiting()},1000);render();
