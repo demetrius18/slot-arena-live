@@ -29,6 +29,14 @@ Non caricare mai nel progetto una chiave `service_role`, una secret key o la pas
 
 Il pulsante **Archivia attuale** conserva il risultato finale. Il pulsante **Storico tornei** permette di riaprire gli eventi salvati.
 
+I tornei archiviati vengono aperti in **sola lettura**, così il salvataggio automatico non può alterare lo storico.
+
+## Correzione per versioni precedenti
+
+Se un torneo già archiviato appare ancora come `LIVE`, eseguire una volta
+`database-fix-archive.sql` nel SQL Editor di Supabase. Lo script corregge lo
+stato senza eliminare partecipanti, crediti o classifiche.
+
 ## Privacy
 
 Usare nomi di gara, iniziali o codici. Non inserire numeri di conto, documenti, depositi, recapiti o altri dati personali non necessari.

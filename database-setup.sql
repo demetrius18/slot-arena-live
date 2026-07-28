@@ -74,3 +74,6 @@ begin
     alter publication supabase_realtime add table public.tournaments;
   end if;
 end $$;
+
+-- Forza l'API Supabase a riconoscere immediatamente la nuova tabella.
+notify pgrst, 'reload schema';

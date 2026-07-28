@@ -9,6 +9,7 @@
   let saveTimer;
   let lastSaved = "";
   let lastWrite = 0;
+  let readOnly = false;
   let handlers = {};
 
   const status = (kind, text) => handlers.onStatus?.({ kind, text });
@@ -71,11 +72,12 @@
       const tournament = await findTournament();
       if (tournament) {
         tournamentId = tournament.id;
+        readOnly = tournament.status === "completed";
         localStorage.setItem(ID_KEY, tournamentId);
         lastSaved = JSON.stringify(tournament.state);
         handlers.onState?.(tournament.state, tournament);
         subscribe(tournamentId);
-        status("online", `Online · ${tournament.name}`);
+        status(readOnly ? "ready" : "online", `${readOnly ? "Archivio" : "Online"} · ${tournament.name}`);
       } else {
         status(session ? "ready" : "offline", session ? "Crea il primo torneo" : "Nessun torneo online");
       }
@@ -110,6 +112,7 @@
       .single();
     if (error) throw error;
     tournamentId = data.id;
+    readOnly = false;
     localStorage.setItem(ID_KEY, tournamentId);
     lastSaved = JSON.stringify(state);
     subscribe(tournamentId);
@@ -119,12 +122,16 @@
 
   async function archiveTournament() {
     if (!session?.user || !tournamentId) throw new Error("Nessun torneo amministrabile");
+    if (readOnly) throw new Error("Questo torneo è già archiviato");
+    clearTimeout(saveTimer);
+    await flush();
     const { error } = await client
       .from("tournaments")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", tournamentId);
     if (error) throw error;
-    status("online", "Torneo archiviato nello storico");
+    readOnly = true;
+    status("ready", "Archiviato · sola lettura");
   }
 
   async function listTournaments() {
@@ -141,16 +148,17 @@
     const { data, error } = await client.from("tournaments").select("*").eq("id", id).single();
     if (error) throw error;
     tournamentId = data.id;
+    readOnly = data.status === "completed";
     localStorage.setItem(ID_KEY, tournamentId);
     lastSaved = JSON.stringify(data.state);
     handlers.onState?.(data.state, data);
     subscribe(tournamentId);
-    status("online", `Online · ${data.name}`);
+    status(readOnly ? "ready" : "online", `${readOnly ? "Archivio" : "Online"} · ${data.name}`);
     return data;
   }
 
   async function flush() {
-    if (!session?.user || !tournamentId || !pendingState) return;
+    if (!session?.user || !tournamentId || !pendingState || readOnly) return;
     const snapshot = pendingState;
     pendingState = null;
     const serialized = JSON.stringify(snapshot);
@@ -171,7 +179,7 @@
   }
 
   function scheduleSave(state) {
-    if (!session?.user || !tournamentId) return;
+    if (!session?.user || !tournamentId || readOnly) return;
     pendingState = JSON.parse(JSON.stringify(state));
     clearTimeout(saveTimer);
     const wait = Math.max(700, 5000 - (Date.now() - lastWrite));
@@ -189,6 +197,7 @@
     scheduleSave,
     flush,
     isAdmin: () => Boolean(session?.user),
-    currentId: () => tournamentId
+    currentId: () => tournamentId,
+    isReadOnly: () => readOnly
   };
 })();
